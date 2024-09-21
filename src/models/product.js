@@ -10,7 +10,7 @@ module.exports = (sequelize) => {
             primaryKey: true,
             autoIncrement: true,
         },
-        title: {
+        name: {
             type: DataTypes.STRING,
             allowNull: false,
         },
@@ -33,7 +33,6 @@ module.exports = (sequelize) => {
     }, {
         sequelize,
         modelName: 'Product',
-        timestamps: false,
     });
 
     return Product;
