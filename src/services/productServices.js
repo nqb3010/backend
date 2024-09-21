@@ -2,6 +2,7 @@ const { where } = require("sequelize");
 const db = require("../models/index");
 const { parse } = require("path");
 const { url } = require("inspector");
+const { raw } = require("body-parser");
 
 const processedProducts = (products, getAll = false) => {
     return products.map(product => {
@@ -100,8 +101,28 @@ const getProductById = async (id) => {
         }
     });
 }
+const getProductSize = async (id) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const productSizes = await db.ProductSize.findAll({
+                where: {
+                    product_id: id,
+                    quantity: {
+                        [db.Sequelize.Op.gt]: 0
+                    }
+                },
+                attributes: ['product_id', 'size', 'quantity']
+
+            });
+            resolve(productSizes);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
 
 module.exports = {
     getProducts,
     getProductById,
+    getProductSize
 };
