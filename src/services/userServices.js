@@ -150,7 +150,7 @@ const login = async (data) => {
         );
         if (checkPassword === true) {
           const token = CommonUtils.encodeToken(user.email);
-          console.log(data);
+          // console.log(data);
           delete user.password;
           console.log(user);
           resolve({

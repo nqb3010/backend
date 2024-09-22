@@ -3,6 +3,7 @@ const db = require("../models/index");
 const { parse } = require("path");
 const { url } = require("inspector");
 const { raw } = require("body-parser");
+const product = require("../models/product");
 
 const processedProducts = (products, getAll = false) => {
     return products.map(product => {
@@ -89,32 +90,20 @@ const getProducts = async (data) => {
 const getProductById = async (id) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const product = await db.Product.findOne({
-                where: {
-                    id: id
-                }
+            const product = await db.Product.findByPk(id, {
+                include: [
+                    {
+                        model: db.ProductSize,
+                        as: 'sizes',
+                        attributes: ['size', 'quantity'],
+                        quantity: { [db.Sequelize.Op.gt]: 0 }
+                    },
+                ],
+                raw: false,
             });
-        const url_imgProducts = processedProducts([product], true);
+        const result = product.toJSON();
+        const url_imgProducts = processedProducts([result], true);
             resolve(url_imgProducts);
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
-const getProductSize = async (id) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const productSizes = await db.ProductSize.findAll({
-                where: {
-                    product_id: id,
-                    quantity: {
-                        [db.Sequelize.Op.gt]: 0
-                    }
-                },
-                attributes: ['product_id', 'size', 'quantity']
-
-            });
-            resolve(productSizes);
         } catch (error) {
             reject(error);
         }
@@ -124,5 +113,4 @@ const getProductSize = async (id) => {
 module.exports = {
     getProducts,
     getProductById,
-    getProductSize
-};
+}

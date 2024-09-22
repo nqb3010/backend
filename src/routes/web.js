@@ -12,6 +12,5 @@ const initRoutes = (app) => {
     app.post("/api/change-password", middlewareController.verifyToken, userController.handleChangePassword);
     app.get("/api/products", productsController.getProducts);
     app.get("/api/product/:id", productsController.getProductById);
-    app.get("/api/productSize/:id", productsController.getProductSize);
 };
 module.exports = initRoutes;

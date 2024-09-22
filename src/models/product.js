@@ -2,8 +2,15 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-    class Product extends Model {}
-
+    class Product extends Model {
+        static associate(models) {
+            Product.hasMany(models.ProductSize, { 
+                foreignKey: 'product_id', 
+                sourceKey: 'id', 
+                as: 'sizes'
+              });       
+    }
+    }
     Product.init({
         id: {
             type: DataTypes.INTEGER,
