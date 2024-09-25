@@ -4,6 +4,7 @@ const { parse } = require("path");
 const { url } = require("inspector");
 const { raw } = require("body-parser");
 const product = require("../models/product");
+require('dotenv').config();
 
 const processedProducts = (products, getAll = false) => {
     return products.map(product => {
@@ -19,7 +20,7 @@ const processedProducts = (products, getAll = false) => {
 const getProducts = async (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const limit = 24;
+            const limit = parseInt(process.env.LIMIT_PRODUCTS) || 10;
             const page = parseInt(data.page, 10) || 1;
             const offset = limit * (page - 1);
         if(data.type === 'all') {
