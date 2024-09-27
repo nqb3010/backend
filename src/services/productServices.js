@@ -8,13 +8,20 @@ require('dotenv').config();
 
 const processedProducts = (products, getAll = false) => {
     return products.map(product => {
-        const images = product.url_img ? product.url_img.split(';') : [];
+        // Kiểm tra và tách url_img
+        const images = Array.isArray(product.url_img) ? product.url_img : (product.url_img ? product.url_img.split(';') : []);
+        
+        // Kiểm tra và tách sizes
+        const sizes = product.sizes && typeof product.sizes.size === 'string' ? product.sizes.size.split(';') : [];
+
         return {
             ...product,
-            url_img: getAll ? images : (images[0] || '')
+            url_img: getAll ? images : (images[0] || ''),
+            sizes: getAll ? sizes : (sizes[0] || '')
         };
     });
 };
+
 
 
 const getProducts = async (data) => {
@@ -94,17 +101,58 @@ const getProductById = async (id) => {
             const product = await db.Product.findByPk(id, {
                 include: [
                     {
-                        model: db.ProductSize,
+                        model: db.Size,
                         as: 'sizes',
-                        attributes: ['size', 'quantity'],
-                        quantity: { [db.Sequelize.Op.gt]: 0 }
+                        attributes: ['size'],
                     },
                 ],
-                raw: false,
+                raw: true,
+                nest: true,
             });
-        const result = product.toJSON();
-        const url_imgProducts = processedProducts([result], true);
+        // console.log(product);
+        // const result = product.toJSON();
+        const url_imgProducts = processedProducts([product], true);
             resolve(url_imgProducts);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+const searchProduct = async (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const limit = parseInt(process.env.LIMIT_PRODUCTS) || 10;
+            const page = parseInt(data.page, 10) || 1;
+            const offset = limit * (page - 1);
+            const products = await db.Product.findAll({
+                where: {
+                    name: {
+                        [db.Sequelize.Op.like]: `%${data.keyword}%`
+                    }
+                },
+                attributes: ['id', 'name', 'price', 'discount', 'url_img'],
+                limit: limit,
+                offset: offset
+            });
+            const totalProducts = await db.Product.count({
+                where: {
+                    name: {
+                        [db.Sequelize.Op.like]: `%${data.keyword}%`
+                    }
+                }
+            });
+            const totalPages = Math.ceil(totalProducts / limit);
+            const url_imgProducts = processedProducts(products, false);
+            if(page > totalPages) {
+                resolve([]);
+            }
+            console.log(data);
+            resolve({
+                totalPages: totalPages,
+                currentPage: page,
+                products: url_imgProducts
+            });
         } catch (error) {
             reject(error);
         }
@@ -114,4 +162,5 @@ const getProductById = async (id) => {
 module.exports = {
     getProducts,
     getProductById,
+    searchProduct
 }

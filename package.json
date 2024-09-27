@@ -21,6 +21,8 @@
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.3",
+    "nodemailer": "^6.9.15",
+    "otp-generator": "^4.0.1",
     "path": "^0.12.7",
     "sequelize": "^6.37.3"
   }

@@ -18,6 +18,31 @@ const checkUseremail = async (email) => {
     }
   });
 };
+
+const saveOtp = async (email, otp) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const user = await db.User.findOne({ where: { email } });
+      if (user) {
+        await db.User.update({ code:otp }, { where: { email } });
+        resolve({
+          errCode: 0,
+          errMessage: "OK",
+        });
+      }
+      resolve({
+        errCode: 1,
+        errMessage: "Email does not exist",
+      });
+    } catch (error) {
+      resolve({
+        errCode: 1,
+        errMessage: "Something went wrong",
+      });
+    }
+  }
+  );
+};
 const register = async (data) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -274,10 +299,99 @@ const changePassword = async (data, usertoken) => {
       });
     }
   });
-};
+}
+
+const forgotPassword = async (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!data.email) {
+        resolve({
+          errCode: 1,
+          errMessage: "Email is required",
+        });
+        return;
+      }
+      if (!filterEmail.test(data.email)) {
+        resolve({
+          errCode: 1,
+          errMessage: "Email is invalid",
+        });
+        return;
+      }
+      if (!data.otp) {
+        resolve({
+          errCode: 1,
+          errMessage: "OTP is required",
+        });
+        return;
+      }
+      if (!data.password) {
+        resolve({
+          errCode: 1,
+          errMessage: "Password is required",
+        });
+        return;
+      }
+      if (!data.confirmPassword) {
+        resolve({
+          errCode: 1,
+          errMessage: "Confirm password is required",
+        });
+        return;
+      }
+      if(data.password !== data.confirmPassword) {
+        resolve({
+          errCode: 1,
+          errMessage: "Passwords do not match",
+        });
+        return;
+      }
+      if(data.password.length < 6) {
+        resolve({
+          errCode: 1,
+          errMessage: "Password must be at least 6 characters",
+        });
+        return;
+      }
+      const check = await checkUseremail(data.email);
+      if (check === true) {
+        const otp = data.otp;
+        const user = await db.User.findOne({ where: { email: data.email } });
+        if (user.code === otp) {
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(data.password, salt);
+          await db.User.update(
+            { password: hashedPassword },
+            { where: { email: data.email } }
+          );
+          resolve({
+            errCode: 0,
+            errMessage: "OK",
+          });
+        }
+        resolve({
+          errCode: 1,
+          errMessage: "OTP is incorrect",
+        });
+      }
+      resolve({
+        errCode: 1,
+        errMessage: "Email does not exist",
+      });
+    } catch (error) {
+      resolve({
+        errCode: 1,
+        errMessage: "Something went wrong",
+      });
+    }
+  });
+}
 
 module.exports = {
   login,
   register,
   changePassword,
+  checkUseremail,
+  saveOtp,
+  forgotPassword,
 };
