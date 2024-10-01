@@ -10,15 +10,20 @@ const processedProducts = (products, getAll = false) => {
     return products.map(product => {
         // Kiểm tra và tách url_img
         const images = Array.isArray(product.url_img) ? product.url_img : (product.url_img ? product.url_img.split(';') : []);
-        
-        // Kiểm tra và tách sizes
-        const sizes = product.sizes && typeof product.sizes.size === 'string' ? product.sizes.size.split(';') : [];
+        if(product.sizes){ 
+            const sizes = product.sizes && typeof product.sizes.size === 'string' ? product.sizes.size.split(';') : []; 
+            return {
+                ...product,
+                url_img: getAll ? images : (images[0] || ''),
+                sizes: getAll ? sizes : (sizes[0] || '')
+            };
 
-        return {
-            ...product,
-            url_img: getAll ? images : (images[0] || ''),
-            sizes: getAll ? sizes : (sizes[0] || '')
-        };
+        }else {
+            return {
+                ...product,
+                url_img: getAll ? images : (images[0] || '')
+            };
+        }
     });
 };
 
@@ -32,7 +37,14 @@ const getProducts = async (data) => {
             const offset = limit * (page - 1);
         if(data.type === 'all') {
             const products = await db.Product.findAll({
-                attributes: ['id', 'name', 'price', 'discount', 'url_img'],
+                attributes: ['id', 'name', 'price', 'discount', 'url_img',[db.sequelize.literal(`
+                    CASE 
+                        WHEN discount > 0 
+                        THEN CAST(price - (price * discount / 100) AS Int) 
+                        ELSE NULL 
+                    END
+                `),
+                'discounted_price']],
                 order : db.sequelize.random(),
                 limit: limit,
                 offset: offset
@@ -51,10 +63,18 @@ const getProducts = async (data) => {
         }
         if(data.type === 'new') {
             const products = await db.Product.findAll({
-                attributes: ['id', 'name', 'price', 'discount', 'url_img'],
+                attributes: ['id', 'name', 'price', 'discount', 'url_img',[db.sequelize.literal(`
+                    CASE 
+                        WHEN discount > 0 
+                        THEN CAST(price - (price * discount / 100) AS Int) 
+                        ELSE NULL 
+                    END
+                `),
+                'discounted_price']],
                 order: [['createdAt', 'DESC']],
                 limit: limit,
-                offset: offset
+                offset: offset,
+
             });
             const totalProducts = await db.Product.count();
             const totalPages = Math.ceil(totalProducts / limit);
@@ -74,7 +94,14 @@ const getProducts = async (data) => {
         console.log(data);    
         const products = await db.Product.findAll({
             where: data.type ? { type: data.type } : {},
-            attributes: ['id', 'name', 'price', 'discount', 'url_img'],
+            attributes: ['id', 'name', 'price', 'discount', 'url_img',[db.sequelize.literal(`
+                CASE 
+                    WHEN discount > 0 
+                    THEN CAST(price - (price * discount / 100) AS Int) 
+                    ELSE NULL 
+                END
+            `),
+            'discounted_price']],
             limit: limit,
             offset: offset
         });        
@@ -106,11 +133,22 @@ const getProductById = async (id) => {
                         attributes: ['size'],
                     },
                 ],
+                attributes: {
+                    include: [
+                        [db.sequelize.literal(`
+                            CASE 
+                                WHEN discount > 0 
+                                THEN CAST(price - (price * discount / 100) AS Int) 
+                                ELSE NULL 
+                            END
+                        `),
+                        'discounted_price'],
+                    ],
+                },
                 raw: true,
                 nest: true,
             });
-        // console.log(product);
-        // const result = product.toJSON();
+        console.log(id);
         const url_imgProducts = processedProducts([product], true);
             resolve(url_imgProducts);
         } catch (error) {

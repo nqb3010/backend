@@ -1,4 +1,5 @@
 'use strict';
+const { get } = require('http');
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
