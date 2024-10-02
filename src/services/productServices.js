@@ -4,6 +4,7 @@ const { parse } = require("path");
 const { url } = require("inspector");
 const { raw } = require("body-parser");
 const product = require("../models/product");
+const { time } = require("console");
 require('dotenv').config();
 
 const processedProducts = (products, getAll = false) => {
@@ -91,7 +92,7 @@ const getProducts = async (data) => {
         if (!data.type) {
             resolve([]);
         } 
-        console.log(data);    
+        console.log("get data product type "+data.type);    
         const products = await db.Product.findAll({
             where: data.type ? { type: data.type } : {},
             attributes: ['id', 'name', 'price', 'discount', 'url_img',[db.sequelize.literal(`
@@ -148,7 +149,8 @@ const getProductById = async (id) => {
                 raw: true,
                 nest: true,
             });
-        console.log(id);
+            // add time in console.log
+            console.log("get data product id "+id);
         const url_imgProducts = processedProducts([product], true);
             resolve(url_imgProducts);
         } catch (error) {
@@ -185,7 +187,7 @@ const searchProduct = async (data) => {
             if(page > totalPages) {
                 resolve([]);
             }
-            console.log(data);
+            console.log("get data search product "+data.keyword);
             resolve({
                 totalPages: totalPages,
                 currentPage: page,
