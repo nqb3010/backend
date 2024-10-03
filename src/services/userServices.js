@@ -25,6 +25,7 @@ const saveOtp = async (email, otp) => {
       const user = await db.User.findOne({ where: { email } });
       if (user) {
         await db.User.update({ code:otp }, { where: { email } });
+        console.log("OTP: ", otp);
         resolve({
           errCode: 0,
           errMessage: "OK",
@@ -357,13 +358,21 @@ const forgotPassword = async (data) => {
       if (check === true) {
         const otp = data.otp;
         const user = await db.User.findOne({ where: { email: data.email } });
+        if (new Date().getTime() - user.updatedAt.getTime() > 600000) {
+          resolve({
+              errCode: 1,
+              errMessage: "OTP has expired", // Thông báo rõ ràng rằng OTP đã hết hạn
+          });
+          return; // Dừng lại để không thực hiện các hành động khác
+      }      
         if (user.code === otp) {
           const salt = await bcrypt.genSalt(10);
           const hashedPassword = await bcrypt.hash(data.password, salt);
           await db.User.update(
-            { password: hashedPassword },
+            { password: hashedPassword, code: null },
             { where: { email: data.email } }
           );
+          console.log("Password changed");
           resolve({
             errCode: 0,
             errMessage: "OK",

@@ -2,8 +2,17 @@
 const { Model, DataTypes } = require('sequelize');
 
 // models/user.js
-module.exports = (sequelize, DataTypes) => {
-    const User = sequelize.define('User', {
+module.exports = (sequelize) => {
+    class User extends Model {
+        static associate(models) {
+            User.hasMany(models.Cart, {
+                foreignKey: 'user_id',
+                sourceKey: 'id',
+                as: 'carts'
+            });
+        }
+    }
+    User.init({
       email: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -37,7 +46,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+    }, {
+        sequelize,
+        modelName: 'User',
     });
-  
+
     return User;
-  };
+}

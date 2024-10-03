@@ -1,14 +1,18 @@
 'use strict';
-const { get } = require('http');
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
     class Product extends Model {
         static associate(models) {
             Product.hasMany(models.Size, { 
-                foreignKey: 'id', // Khóa ngoại trong bảng Size
-                sourceKey: 'size_id', // Khóa chính trong bảng Product
+                foreignKey: 'product_id', // Khóa ngoại trong bảng Size
+                sourceKey: 'id', // Khóa chính trong bảng Product
                 as: 'sizes' // Tên alias cho mối quan hệ
+            });
+            Product.hasMany(models.Cart, {
+                foreignKey: 'product_id',
+                sourceKey: 'id',
+                as: 'carts'
             });       
     }
     }
@@ -36,10 +40,6 @@ module.exports = (sequelize) => {
         },
         url_img: {
             type: DataTypes.STRING,
-            allowNull: false,
-        },
-        size_id: {
-            type: DataTypes.INTEGER,
             allowNull: false,
         },
     }, {

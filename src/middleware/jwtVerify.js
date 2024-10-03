@@ -18,7 +18,7 @@ const middlewareController = {
                     return res.status(401).json({ message: "Unauthorized" });
                 }
                 
-                req.user = user;
+                req.user = user.email;
                 next();
             } catch (err) {
                 return res.status(401).json({ message: "Unauthorized" });
@@ -27,6 +27,7 @@ const middlewareController = {
             return res.status(401).json({ message: "Unauthorized" });
         }
     }
+
 };
 
 module.exports = middlewareController;

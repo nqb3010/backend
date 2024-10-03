@@ -8,22 +8,28 @@ const { time } = require("console");
 require('dotenv').config();
 
 const processedProducts = (products, getAll = false) => {
-    return products.map(product => {
+    return products.map(item => {
+        const product = item.product || item; // Xử lý cả trường hợp có nested product hoặc không
+        
         // Kiểm tra và tách url_img
-        const images = Array.isArray(product.url_img) ? product.url_img : (product.url_img ? product.url_img.split(';') : []);
-        if(product.sizes){ 
-            const sizes = product.sizes && typeof product.sizes.size === 'string' ? product.sizes.size.split(';') : []; 
+        const images = Array.isArray(product.url_img) 
+            ? product.url_img 
+            : (product.url_img ? product.url_img.split(';') : []);
+        
+        const processedProduct = {
+            ...product,
+            url_img: getAll ? images : (images[0] || '')
+        };
+        
+        if (item.product) {
+            // Nếu là dữ liệu mới (có nested product)
             return {
-                ...product,
-                url_img: getAll ? images : (images[0] || ''),
-                sizes: getAll ? sizes : (sizes[0] || '')
+                ...item,
+                product: processedProduct
             };
-
-        }else {
-            return {
-                ...product,
-                url_img: getAll ? images : (images[0] || '')
-            };
+        } else {
+            // Nếu là dữ liệu cũ
+            return processedProduct;
         }
     });
 };
@@ -146,12 +152,13 @@ const getProductById = async (id) => {
                         'discounted_price'],
                     ],
                 },
-                raw: true,
-                nest: true,
+                raw: false,
+                // nest: true,
             });
             // add time in console.log
+            const result = product.toJSON();
             console.log("get data product id "+id);
-        const url_imgProducts = processedProducts([product], true);
+        const url_imgProducts = processedProducts([result], true);
             resolve(url_imgProducts);
         } catch (error) {
             reject(error);
@@ -200,6 +207,7 @@ const searchProduct = async (data) => {
 }
 
 module.exports = {
+    processedProducts,
     getProducts,
     getProductById,
     searchProduct
