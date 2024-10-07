@@ -103,20 +103,72 @@ const getAllcartUser = async (data, user) => {
           where: {
             user_id: User.id,
           },
-          attributes: ["id", "quantity"],
+          attributes: [
+            "id", 
+            "quantity",
+            [
+              db.sequelize.literal(`
+                CAST(
+                  SUM(
+                    CASE
+                      WHEN Product.discount > 0
+                      THEN quantity * (Product.price - (Product.price * Product.discount / 100))
+                      ELSE quantity * Product.price
+                    END
+                  ) AS INTEGER
+                )
+              `),
+              'total_price'
+            ]
+          ],
           include: [
             {
               model: db.Product,
               as: "product",
-              attributes: ["id", "name", "price", "discount", "url_img"],
-            }, // Alias phải khớp với định nghĩa mối quan hệ
-            { model: db.Size, as: "size", attributes: ["size"] }, // Alias phải khớp với định nghĩa mối quan hệ
+              attributes: [
+                "id", 
+                "name", 
+                "price", 
+                "discount",
+                [
+                  db.sequelize.literal(`
+                    CASE
+                      WHEN discount > 0
+                      THEN CAST(price - (price * discount / 100) AS INTEGER)
+                      ELSE NULL
+                    END
+                  `),
+                  "discounted_price",
+                ]
+              ],
+              include: [
+                {
+                  model: db.Image,
+                  as: "images",
+                  attributes: ["url_image"],
+                },
+              ],
+            },
+            { 
+              model: db.Size, 
+              as: "size", 
+              attributes: ["size"] 
+            },
           ],
+          group: ['Cart.id', 'product.id', 'size.id'],
           raw: true,
           nest: true,
+          // logging: console.log
         });
-        const result = productServices.processedProducts(Cart, false);
-        resolve(result);
+        
+        // Calculate grand total (already in integer form from the query)
+        console.log(User.id);
+        const grandTotal = Cart.reduce((sum, item) => sum + item.total_price, 0);
+        
+        resolve({
+          items: Cart,
+          grandTotal: grandTotal,
+        });
       } else {
       }
     } catch (error) {
@@ -138,7 +190,7 @@ const deleteCart = async (data, user) => {
         const Cart = await db.Cart.findOne({
           where: {
             user_id: User.id,
-            id: data.id,
+            product_id: data.product_id,
           },
         });
         if (Cart === null) {
@@ -150,7 +202,7 @@ const deleteCart = async (data, user) => {
           const deleteCart = await db.Cart.destroy({
             where: {
               user_id: User.id,
-              id: data.id,
+              product_id: data.product_id,
             },
           });
           resolve({
