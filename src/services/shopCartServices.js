@@ -6,7 +6,7 @@ const productServices = require("./productServices");
 const addToCart = async (data, user) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log(data);
+      // console.log(data);
       const checkUser = await userService.checkUseremail(user);
       if (data.quantity <= 0) {
         resolve({
@@ -162,7 +162,7 @@ const getAllcartUser = async (data, user) => {
         });
         
         // Calculate grand total (already in integer form from the query)
-        console.log(User.id);
+        // console.log(User.id);
         const grandTotal = Cart.reduce((sum, item) => sum + item.total_price, 0);
         
         resolve({

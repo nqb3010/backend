@@ -25,7 +25,7 @@ const saveOtp = async (email, otp) => {
       const user = await db.User.findOne({ where: { email } });
       if (user) {
         await db.User.update({ code:otp }, { where: { email } });
-        console.log("OTP: ", otp);
+        // console.log("OTP: ", otp);
         resolve({
           errCode: 0,
           errMessage: "OK",
@@ -178,7 +178,7 @@ const login = async (data) => {
           const token = CommonUtils.encodeToken(user.email);
           // console.log(data);
           delete user.password;
-          console.log(user);
+          // console.log(user);
           resolve({
             errCode: 0,
             errMessage: "OK",
@@ -372,7 +372,7 @@ const forgotPassword = async (data) => {
             { password: hashedPassword, code: null },
             { where: { email: data.email } }
           );
-          console.log("Password changed");
+          // console.log("Password changed");
           resolve({
             errCode: 0,
             errMessage: "OK",

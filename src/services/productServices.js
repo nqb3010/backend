@@ -1,6 +1,6 @@
 const { where } = require("sequelize");
 const db = require("../models/index");
-const { parse } = require("path");
+const { parse, sep } = require("path");
 const { url } = require("inspector");
 const { raw } = require("body-parser");
 const product = require("../models/product");
@@ -29,20 +29,18 @@ const getProducts = async (data) => {
                       END
                     `),
                     'discounted_price'
-                  ]
+                  ],
+                  [db.sequelize.literal(`
+                    (SELECT url_image FROM Images 
+                     WHERE Images.product_id = Product.id 
+                     LIMIT 1)
+                  `), 'url_image']
                 ],
                 order: db.sequelize.random(),
                 limit: limit,
                 offset: offset,
-                include: [
-                  {
-                    model: db.Image,
-                    as: 'images',
-                    attributes: ['url_image'],
-                  }
-                ],
                 raw: true, 
-                nest: true
+                // nest: true
               });
               
             const totalProducts = await db.Product.count();
@@ -56,26 +54,30 @@ const getProducts = async (data) => {
                 products: products
             });
         }
-        if(data.type === 'new') {
+        if(data.type === 'sale') {
             const products = await db.Product.findAll({
-                attributes: ['id', 'name', 'price', 'discount', 'createdAt',[db.sequelize.literal(`
+                where: {
+                    discount:  {
+                        [db.Sequelize.Op.gt]: 0
+                    }
+                },
+                attributes: ['id', 'name', 'price', 'discount',[db.sequelize.literal(`
                     CASE 
                         WHEN discount > 0 
                         THEN CAST(price - (price * discount / 100) AS Int) 
                         ELSE NULL 
                     END
                 `),
-                'discounted_price']],
-                order: [['createdAt', 'ASC']],
+                'discounted_price'],
+                [db.sequelize.literal(`
+                  (SELECT url_image FROM Images 
+                   WHERE Images.product_id = Product.id 
+                   LIMIT 1)
+                `), 'url_image']
+            ],
+                order: [['discount', 'DESC']],
                 limit: limit,
                 offset: offset,
-                include: [
-                    {
-                        model: db.Image,
-                        as: 'images',
-                        attributes: ['url_image'],
-                    }
-                ],
                 raw: true,
                 nest: true
 
@@ -94,7 +96,7 @@ const getProducts = async (data) => {
         if (!data.type) {
             resolve([]);
         } 
-        console.log("get data product type "+data.type);    
+        // console.log("get data product type "+data.type);    
         const products = await db.Product.findAll({
             where: data.type ? { type: data.type } : {},
             attributes: ['id', 'name', 'price', 'discount',[db.sequelize.literal(`
@@ -104,16 +106,15 @@ const getProducts = async (data) => {
                     ELSE NULL 
                 END
             `),
-            'discounted_price']],
+            'discounted_price'],
+            [db.sequelize.literal(`
+              (SELECT url_image FROM Images 
+               WHERE Images.product_id = Product.id 
+               LIMIT 1)
+            `), 'url_image']
+            ],
             limit: limit,
             offset: offset,
-            include: [
-                {
-                    model: db.Image,
-                    as: 'images',
-                    attributes: ['url_image'],
-                }
-            ],
             raw: true,
             nest: true
         });        
@@ -165,7 +166,7 @@ const getProductById = async (id) => {
             });
             // add time in console.log
             const result = product.toJSON();
-            console.log("get data product id "+id);
+            // console.log("get data product id "+id);
             resolve(result);
         } catch (error) {
             reject(error);
@@ -209,7 +210,7 @@ const searchProduct = async (data) => {
             if(page > totalPages) {
                 resolve([]);
             }
-            console.log("get data search product "+data.keyword);
+            // console.log("get data search product "+data.keyword);
             resolve({
                 totalPages: totalPages,
                 currentPage: page,
