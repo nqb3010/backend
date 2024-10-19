@@ -14,6 +14,7 @@ const initRoutes = (app) => {
     app.post("/api/change-password", middlewareController.verifyToken, userController.handleChangePassword);
     app.post("/api/getOtp", mailController.getOtp);
     app.post("/api/forgot-password", userController.handleForgotPassword);
+    app.post("/api/feedback", mailController.feedback);
 
     //product routes
     app.get("/api/products", productsController.getProducts);

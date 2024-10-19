@@ -1,7 +1,7 @@
 const e = require("express");
 const transporter = require("../config/mailConfig");
 const otpGenerator = require("otp-generator");
-const userServices = require("../services/userServices");
+const userServices = require("./userService");
 const db = require("../models/index");
 
 const filterEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
@@ -95,7 +95,60 @@ Lúc: ${new Date().toLocaleString()}`,
     }
   });
 };
-
+const feedback = async (data) => {
+  return new Promise(async (resolve, reject) => {
+    if (!data.email) {
+      resolve({
+        errCode: 1,
+        errMessage: "Email is required",
+      });
+      return;
+    }
+    if(!data.fullName){
+      resolve({
+        errCode: 1,
+        errMessage: "Fullname is required",
+      });
+      return;
+    }
+    if(!data.phoneNumber){
+      resolve({
+        errCode: 1,
+        errMessage: "Phone number is required",
+      });
+      return;
+    }
+    if(!data.content){
+      resolve({
+        errCode: 1,
+        errMessage: "Content is required",
+      });
+      return;
+    }
+    const mailData = {
+      email: process.env.EMAIL_ADMIN,
+      subject: "Feedback",
+      text: `Feedback from ${data.email}
+Name: ${data.fullName}
+Phone number: ${data.phoneNumber}
+Content: ${data.content}
+      `,
+    };
+    const mailResult = await sendMail(mailData);
+    if (mailResult.accepted.length > 0) {
+      resolve({
+        errCode: 0,
+        message: "Feedback success",
+      });
+    } else {
+      resolve({
+        errCode: 1,
+        errMessage: "Feedback fail",
+      });
+    }
+  });
+}
 module.exports = {
   getOtp,
+  feedback,
 };

@@ -186,16 +186,21 @@ const searchProduct = async (data) => {
                         [db.Sequelize.Op.like]: `%${data.keyword}%`
                     }
                 },
-                attributes: ['id', 'name', 'price', 'discount'],
+                attributes: ['id', 'name', 'price', 'discount',[db.sequelize.literal(`
+                    CASE 
+                        WHEN discount > 0 
+                        THEN CAST(price - (price * discount / 100) AS Int) 
+                        ELSE NULL 
+                    END
+                `),
+                'discounted_price'],
+                [db.sequelize.literal(`
+                  (SELECT url_image FROM Images 
+                   WHERE Images.product_id = Product.id 
+                   LIMIT 1)
+                `), 'url_image']],
                 limit: limit,
                 offset: offset,
-                include: [
-                    {
-                        model: db.Image,
-                        as: 'images',
-                        attributes: ['url_image'],
-                    }
-                ],
                 raw: true,
                 nest: true
             });
