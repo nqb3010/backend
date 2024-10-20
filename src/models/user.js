@@ -10,6 +10,11 @@ module.exports = (sequelize) => {
                 sourceKey: 'id',
                 as: 'carts'
             });
+            User.hasMany(models.Address, {
+                foreignKey: 'user_id',
+                sourceKey: 'id',
+                as: 'addresses'
+            });
         }
     }
     User.init({

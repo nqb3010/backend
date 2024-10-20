@@ -1,7 +1,7 @@
 const e = require("express");
 const transporter = require("../config/mailConfig");
 const otpGenerator = require("otp-generator");
-const userServices = require("./userService");
+const userService = require("./userService");
 const db = require("../models/index");
 
 const filterEmail = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
@@ -51,7 +51,7 @@ const getOtp = async (data) => {
       return;
     }
 
-    const check = await userServices.checkUseremail(data.email);
+    const check = await userService.checkUseremail(data.email);
     if (check === true) {
       const User = await db.User.findOne({
         where: {
@@ -76,7 +76,7 @@ Cảm ơn bạn đã tin tưởng sử dụng dịch vụ. Đây là Mã OTP l�
 Mã xác minh: ${otp}
 Lúc: ${new Date().toLocaleString()}`,
       };
-      const result = await userServices.saveOtp(data.email, otp);
+      const result = await userService.saveOtp(data.email, otp);
       const mailResult = await sendMail(mailData);
       if (mailResult.accepted.length > 0) {
         

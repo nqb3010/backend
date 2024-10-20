@@ -1,7 +1,7 @@
 const { get } = require("../config/mailConfig");
 const db = require("../models/index");
 const userService = require("./userService");
-const productServices = require("./productService");
+const productService = require("./productService");
 
 const addToCart = async (data, user) => {
   return new Promise(async (resolve, reject) => {

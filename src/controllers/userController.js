@@ -1,8 +1,8 @@
-const userServices = require('../services/userService');
+const userService = require('../services/userService');
 
 const handleRegister = async (req, res) => {
     try {
-        const result = await userServices.register(req.body);
+        const result = await userService.register(req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -10,7 +10,7 @@ const handleRegister = async (req, res) => {
 }
 const handleLogin = async (req, res) => {
     try {
-        const result = await userServices.login(req.body);
+        const result = await userService.login(req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -18,7 +18,7 @@ const handleLogin = async (req, res) => {
 };
 const handleChangePassword = async (req, res) => {
     try {
-        const result = await userServices.changePassword(req.body, req.user);
+        const result = await userService.changePassword(req.body, req.user);
         res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -27,7 +27,7 @@ const handleChangePassword = async (req, res) => {
 
 const handleForgotPassword = async (req, res) => {
     try {
-        const result = await userServices.forgotPassword(req.body);
+        const result = await userService.forgotPassword(req.body);
         res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });

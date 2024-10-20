@@ -4,6 +4,8 @@ const middlewareController = require("../middleware/jwtVerify");
 const productsController = require("../controllers/productController");
 const mailController = require("../controllers/mailController");
 const shopCartController = require("../controllers/shopCartController");
+const orderController = require("../controllers/orderController");
+const voucherController = require("../controllers/voucherController");
 const initRoutes = (app) => {
     app.get("/", (req, res) => {
         res.send("Hello World!");
@@ -26,5 +28,13 @@ const initRoutes = (app) => {
     app.get("/api/get-cart", middlewareController.verifyToken, shopCartController.getAllcartUser);
     app.post("/api/delete-cart", middlewareController.verifyToken, shopCartController.deleteCart);
 
+    //order routes
+    app.post("/api/create-order", middlewareController.verifyToken, orderController.createOrder);
+    app.get("/api/get-order", middlewareController.verifyToken, orderController.getOrders);
+    app.post("/api/payment-order", middlewareController.verifyToken, orderController.paymentOrder);
+    app.post("/api/vnpay-return", middlewareController.verifyToken, orderController.vnpayReturn);
+
+    //voucher routes
+    app.post("/api/apply-voucher", middlewareController.verifyToken, voucherController.applyVoucher);
 };
 module.exports = initRoutes;

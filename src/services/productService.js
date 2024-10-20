@@ -142,32 +142,29 @@ const getProductById = async (id) => {
                     {
                         model: db.Size,
                         as: 'sizes',
-                        attributes: ['size'],
+                        attributes: ['size', 'stock'],
                     },
                     {
                         model: db.Image,
                         as: 'images',
                         attributes: ['url_image'],}
                 ],
-                attributes: {
-                    include: [
-                        [db.sequelize.literal(`
-                            CASE 
-                                WHEN discount > 0 
-                                THEN CAST(price - (price * discount / 100) AS Int) 
-                                ELSE NULL 
-                            END
-                        `),
-                        'discounted_price'],
-                    ],
-                },
+                attributes: ["id", "name", "price", "discount", "description",[db.sequelize.literal(`
+                    CASE 
+                        WHEN discount > 0 
+                        THEN CAST(price - (price * discount / 100) AS Int) 
+                        ELSE NULL 
+                    END
+                `),
+                'discounted_price']],
+
                 raw: false,
                 // nest: true,
             });
             // add time in console.log
-            const result = product.toJSON();
+            // const result = product.toJSON();
             // console.log("get data product id "+id);
-            resolve(result);
+            resolve(product);
         } catch (error) {
             reject(error);
         }
